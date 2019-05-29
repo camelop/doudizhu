@@ -12,8 +12,8 @@ class BasePolicy(object):
     # Util methods
 
     def _legal_call_score(self, state):
-        table = state['table']
-        base_score = table.max_call_score + 1
+        max_call_score = state['max_call_score']
+        base_score = max_call_score + 1
         ret = [0]
         if base_score <= 3:
             for i in range(base_score, 4):
@@ -24,16 +24,15 @@ class BasePolicy(object):
         '''
         notice! return a set of tuples (list is unhashable)
         '''
-        table = state['table']
         hand_pokers = state['hand_pokers']
-        seat = state['seat']
+        first = state['first']
+        last_shot_poker = state['last_shot_poker']
 
-        turn_pokers = table.last_shot_poker
+        turn_pokers = last_shot_poker
         hand_cards = Rule._to_cards(hand_pokers)
         turn_cards = Rule._to_cards(turn_pokers)
         ret = set()
         
-        first = not table.last_shot_poker or table.last_shot_seat == seat
         if not first:
             ret.add(()) # pass
             card_type, card_value = rule._cards_value(turn_cards)
@@ -61,5 +60,11 @@ class BasePolicy(object):
                         ret.add(tuple(Rule._to_pokers(hand_pokers, t)))
             return ret
 
+    def finish(self, reward):
+        pass
+    
+    def reset(self):
+        pass
+        
     def __str__(self):
         return self.__class__.__name__

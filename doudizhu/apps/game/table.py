@@ -139,7 +139,6 @@ class Table(object):
                 break
 
     def on_game_over(self, winner):
-        # not called!
         # if winner.hand_pokers:
         #     return
         coin = self.room.entrance_fee * self.call_score * self.multiple
@@ -149,8 +148,18 @@ class Table(object):
                 if pp != p:
                     response.append([pp.uid, *pp.hand_pokers])
             p.send(response)
-        point = self.call_score * self.multiple
-        logging.info('RESULT:\t'+'\t'.join(["{}({})".format(str(p), -point if p != winner else +2*point) for p in self.players]))
+        point = self.max_call_score * self.multiple
+        ppoint = {}
+        FARMER = 1
+        LANDLORD = 2
+        if winner.role == FARMER:
+            for p in self.players:
+                ppoint[p] = point if p.role == FARMER else -2*point
+        else:
+            for p in self.players:
+                ppoint[p] = 2*point if p.role == LANDLORD else -point
+                    
+        logging.info('RESULT:\t'+'\t'.join(["{}({})".format(str(p), ppoint[p]) for p in self.players]))
         # TODO deduct coin from database
         # TODO store poker round to database
         # logging.info('RESULT: Winner-{}, players:{}'.format(str(winner.uid), str[self.players]))

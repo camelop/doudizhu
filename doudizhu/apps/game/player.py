@@ -79,6 +79,10 @@ class Player(object):
             self.table.last_shot_poker = pokers
             for p in pokers:
                 self.hand_pokers.remove(p)
+            
+            card_type, card_value = rule._cards_value(rule._to_cards(pokers))
+            if card_value >= 1000:
+                self.table.multiple *= 2
 
         if self.hand_pokers:
             self.table.go_next_turn()

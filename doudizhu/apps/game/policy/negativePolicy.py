@@ -12,11 +12,9 @@ class NegativePolicy(BasePolicy):
         return 1
 
     def shot_poker(self, state, default_action=None):
-        table = state['table']
-        seat = state['seat']
-        first = not table.last_shot_poker or table.last_shot_seat == seat        
+        first = state['first']
         if first:
-            ret = random.sample(self._legal_shot_poker(state), 1)
+            ret = random.sample(self._legal_shot_poker(state), 1)[0]
         else:
             ret = []
         return ret

@@ -72,10 +72,10 @@ class AiPlayer(Player):
     def _get_state(self):
         return {
             "history": self.history,
-            "table": self.table,
             "hand_pokers": self.hand_pokers,
-            "room": self.room,
-            "seat": self.seat,
+            "last_shot_poker": self.table.last_shot_poker,
+            "max_call_score": self.table.max_call_score,
+            "first": not self.table.last_shot_poker or self.table.last_shot_seat == self.seat,
         }
 
     def _call_score(self):
@@ -92,6 +92,7 @@ class AiPlayer(Player):
         else:
             default_pokers = rule.cards_above(self.hand_pokers, self.table.last_shot_poker)
         pokers = self.policy.shot_poker(self._get_state(), default_action=default_pokers)
+        print("\n".join([str(h) for h in self.history]))
         return pokers
 
     def __str__(self):
