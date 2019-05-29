@@ -26,6 +26,10 @@ Quick Start
 Online Demo  
 <http://m.ihouser.com/>  
 
+Run Simulations
+
+    cd doudizhu
+    python3 simulate.py
 
 运行截图
 
