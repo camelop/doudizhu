@@ -139,6 +139,7 @@ PG.Game.prototype = {
                     alert(this.players[this.whoseTurn].isLandlord ? "地主赢" : "农民赢");
                     PG.Socket.send([PG.Protocol.REQ_RESTART]);
                     this.cleanWorld();
+                    window.location.reload()
                 }
                 this.game.time.events.add(3000, gameOver, this);
                 break;

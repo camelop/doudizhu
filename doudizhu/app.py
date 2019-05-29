@@ -41,7 +41,6 @@ def make_app(port):
     app.listen(port)
     return app
 
-
 def main():
     make_app(settings.PORT)
     logging.info(f'server on http://127.0.0.1:{settings.PORT}')

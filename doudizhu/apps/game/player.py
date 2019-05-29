@@ -13,7 +13,7 @@ LANDLORD = 2
 
 
 class Player(object):
-    def __init__(self, uid: int, name: str, socket: WebSocketHandler = None):
+    def __init__(self, uid: str, name: str, socket: WebSocketHandler = None):
         from .table import Table
         self.uid = uid
         self.name = name
@@ -38,11 +38,11 @@ class Player(object):
 
     def handle_call_score(self, score):
         if 0 < score < self.table.call_score:
-            logger.warning('Player[%d] CALL SCORE[%d] CHEAT', self.uid, score)
+            logger.warning('Player[%s] CALL SCORE[%d] CHEAT', self.uid, score)
             return
 
         if score > 3:
-            logger.warning('Player[%d] CALL SCORE[%d] CHEAT', self.uid, score)
+            logger.warning('Player[%s] CALL SCORE[%d] CHEAT', self.uid, score)
             return
 
         self.is_called = True
@@ -67,11 +67,11 @@ class Player(object):
     def handle_shot_poker(self, pokers):
         if pokers:
             if not rule.is_contains(self.hand_pokers, pokers):
-                logger.warning('Player[%d] play non-exist poker', self.uid)
+                logger.warning('Player[%s] play non-exist poker', self.uid)
                 return
 
             if self.table.last_shot_seat != self.seat and rule.compare_poker(pokers, self.table.last_shot_poker) < 0:
-                logger.warning('Player[%d] play small than last shot poker', self.uid)
+                logger.warning('Player[%s] play small than last shot poker', self.uid)
                 return
         if pokers:
             self.table.history[self.seat] += pokers
@@ -86,7 +86,7 @@ class Player(object):
         response = [Pt.RSP_SHOT_POKER, self.uid, pokers]
         for p in self.table.players:
             p.send(response)
-        logger.info('Player[%d] shot[%s]', self.uid, str(pokers))
+        logger.info('Player[%s] shot[%s]', self.uid, str(pokers))
 
         if not self.hand_pokers:
             self.table.on_game_over(self)

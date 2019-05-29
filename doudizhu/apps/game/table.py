@@ -7,6 +7,7 @@ from tornado.ioloop import IOLoop
 from .player import Player
 from .protocol import Protocol as Pt
 from .components.simple import AiPlayer
+from .settings import POLICY
 
 
 class Table(object):
@@ -58,11 +59,12 @@ class Table(object):
         if size == 2 and nth == 1:
             IOLoop.current().call_later(1, self.ai_join, nth=2)
 
-        p1 = AiPlayer(11, 'IDIOT-I', self.players[0])
+        policy_name = POLICY.__name__
+        p1 = AiPlayer('Alice', policy_name+'-I', self.players[0], POLICY)
         p1.to_server([Pt.REQ_JOIN_TABLE, self.uid])
 
         if size == 1:
-            p2 = AiPlayer(12, 'IDIOT-II', self.players[0])
+            p2 = AiPlayer('Bob', policy_name+'-II', self.players[0], POLICY)
             p2.to_server([Pt.REQ_JOIN_TABLE, self.uid])
 
     def sync_table(self):
@@ -102,7 +104,7 @@ class Table(object):
         response = [Pt.RSP_SHOW_POKER, self.turn_player.uid, self.pokers]
         for p in self.players:
             p.send(response)
-        logging.info('Player[%d] IS LANDLORD[%s]', self.turn_player.uid, str(self.pokers))
+        logging.info('Player[%s] IS LANDLORD[%s]', str(self.turn_player.uid), str(self.pokers))
 
     def go_next_turn(self):
         self.whose_turn += 1
@@ -137,6 +139,7 @@ class Table(object):
                 break
 
     def on_game_over(self, winner):
+        # not called!
         # if winner.hand_pokers:
         #     return
         coin = self.room.entrance_fee * self.call_score * self.multiple
@@ -146,8 +149,11 @@ class Table(object):
                 if pp != p:
                     response.append([pp.uid, *pp.hand_pokers])
             p.send(response)
+        point = self.call_score * self.multiple
+        logging.info('RESULT:\t'+'\t'.join(["{}({})".format(str(p), -point if p != winner else +2*point) for p in self.players]))
         # TODO deduct coin from database
         # TODO store poker round to database
+        # logging.info('RESULT: Winner-{}, players:{}'.format(str(winner.uid), str[self.players]))
         logging.info('Table[%d] GameOver[%d]', self.uid, self.uid)
 
     def remove(self, player):

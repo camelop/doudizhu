@@ -57,7 +57,7 @@ class SocketHandler(WebSocketHandler):
 
     async def on_message(self, message):
         packet = json.loads(message)
-        logging.info('REQ[%d]: %s', self.uid, packet)
+        logging.info('REQ[%s]: %s', self.uid, packet)
 
         code = packet[0]
         if code == Pt.REQ_LOGIN:
@@ -93,15 +93,16 @@ class SocketHandler(WebSocketHandler):
             if table.is_full():
                 table.deal_poker()
                 self.room.on_table_changed(table)
-                logging.info('TABLE[%s] GAME BEGIN[%s]', table.uid, table.players)
+                logging.info('TABLE[%s] GAME BEGIN[%s]', table.uid, str([str(p) for p in table.players]))
 
         elif code == Pt.REQ_CALL_SCORE:
             self.handle_call_score(packet)
 
         elif code == Pt.REQ_DEAL_POKER:
+            # never triggered
             if self.player.table.state == 2:
                 self.player.ready = True
-            self.player.table.ready()
+            self.player.table.ready() # this function not exist...
 
         elif code == Pt.REQ_SHOT_POKER:
             self.handle_shot_poker(packet)
@@ -136,7 +137,7 @@ class SocketHandler(WebSocketHandler):
     def write_message(self, message, binary=False):
         if self.ws_connection is None:
             raise WebSocketClosedError()
-        logging.info('RSP[%d]: %s', self.uid, message)
+        logging.info('RSP[%s]: %s', self.uid, message)
         packet = json.dumps(message)
         return self.ws_connection.write_message(packet, binary=binary)
 

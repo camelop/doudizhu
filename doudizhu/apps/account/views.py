@@ -17,7 +17,10 @@ class SignupHandler(BaseHandler):
 
     async def post(self):
         email = self.get_query_params('email', self.get_query_params('username'))
+        '''
         account = await self.db.fetchone('SELECT id FROM account WHERE email=%s', email)
+        '''
+        account = None
         if account:
             self.write({'errcode': 1, 'errmsg': 'The email has already exist'})
             return
@@ -25,9 +28,11 @@ class SignupHandler(BaseHandler):
         username = self.get_query_params('username')
         password = self.get_query_params('password')
         password = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
-
+        '''
         uid = await self.db.insert('INSERT INTO account (email, username, password, ip_addr) VALUES (%s, %s, %s, %s)',
                                    email, username, password, self.client_ip)
+        '''
+        uid = username
         self.set_current_user(uid, username)
         self.set_header('Content-Type', 'application/json')
         response = {

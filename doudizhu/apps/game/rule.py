@@ -56,9 +56,9 @@ class Rule(object):
             for t in one_rule:
                 if self.is_contains(hand_cards, t):
                     return self._to_pokers(hand_pokers, t)
-            if self.is_contains(hand_cards, 'wW'):
+            if self.is_contains(hand_cards, 'wW'): # ROCKET
                 return [52, 53]
-        return []
+        return [] # pass
 
     @staticmethod
     def _to_cards(pokers):

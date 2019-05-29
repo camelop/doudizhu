@@ -7,21 +7,25 @@ from ..player import Player
 from ..protocol import Protocol as Pt
 from ..rule import rule
 
+from ..policy.basePolicy import BasePolicy
 
 class AiPlayer(Player):
 
-    def __init__(self, uid: int, username: str, player: Player):
+    def __init__(self, uid: str, username: str, player: Player, Policy: BasePolicy):
         from ..views import LoopBackSocketHandler
         super().__init__(uid, username, LoopBackSocketHandler(self))
         self.room = player.room
+        self.history = []
+        self.policy = Policy()
 
     def to_server(self, message):
         packet = json.dumps(message)
         IOLoop.current().add_callback(self.socket.on_message, packet)
-        logging.info('AI[%d] REQ: %s', self.uid, message)
+        logging.info('AI[%s] REQ: %s', self.uid, message)
 
     def from_server(self, packet):
-        logging.info('AI[%d] ON: %s', self.uid, packet)
+        self.history.append(packet)
+        logging.info('AI[%s] ON: %s', self.uid, packet)
         code = packet[0]
         if code == Pt.RSP_LOGIN:
             pass
@@ -40,7 +44,8 @@ class AiPlayer(Player):
                 if not call_end:
                     self.auto_call_score()
                 else:
-                    self.auto_shot_poker()
+                    pass
+                    # self.auto_shot_poker()
         elif code == Pt.RSP_SHOW_POKER:
             if self.table.turn_player == self:
                 self.auto_shot_poker()
@@ -56,16 +61,38 @@ class AiPlayer(Player):
     def auto_call_score(self, score=0):
         # millis = random.randint(1000, 2000)
         # score = random.randint(min_score + 1, 3)
-        packet = [Pt.REQ_CALL_SCORE, self.table.call_score + 1]
+        packet = [Pt.REQ_CALL_SCORE, self._call_score()]
         IOLoop.current().add_callback(self.to_server, packet)
 
     def auto_shot_poker(self):
-        pokers = []
-        if not self.table.last_shot_poker or self.table.last_shot_seat == self.seat:
-            pokers.append(self.hand_pokers[0])
-        else:
-            pokers = rule.cards_above(self.hand_pokers, self.table.last_shot_poker)
-
-        packet = [Pt.REQ_SHOT_POKER, pokers]
+        packet = [Pt.REQ_SHOT_POKER, self._shot_poker()]
         # IOLoop.current().add_callback(self.to_server, packet)
         IOLoop.current().call_later(2, self.to_server, packet)
+
+    def _get_state(self):
+        return {
+            "history": self.history,
+            "table": self.table,
+            "hand_pokers": self.hand_pokers,
+            "room": self.room,
+            "seat": self.seat,
+        }
+
+    def _call_score(self):
+        print(str(self)+"callscore")
+        default_score = self.table.call_score + 1
+        score = self.policy.call_score(self._get_state(), default_action=default_score)
+        print(str(self)+"callscore finish")
+        return score
+    
+    def _shot_poker(self):
+        default_pokers = []
+        if not self.table.last_shot_poker or self.table.last_shot_seat == self.seat:
+            default_pokers.append(self.hand_pokers[0])
+        else:
+            default_pokers = rule.cards_above(self.hand_pokers, self.table.last_shot_poker)
+        pokers = self.policy.shot_poker(self._get_state(), default_action=default_pokers)
+        return pokers
+
+    def __str__(self):
+        return "AI[" + self.uid+ "]{"+ self.name + "}"
