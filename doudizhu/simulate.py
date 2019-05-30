@@ -24,7 +24,7 @@ sim = Simulator([a1, a2, a3], display=False)
 time_start=time.time()
 
 # results = sim.run(seeds=list(range(100)), mirror=True, save=True)
-results = sim.run(seeds=list(range(1000)), mirror=False, save=True)
+results = sim.run(seeds=list(range(2000)), mirror=False, save=True)
 
 time_end=time.time()
 print('Time(s)', time_end-time_start)

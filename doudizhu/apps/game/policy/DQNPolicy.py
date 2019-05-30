@@ -55,7 +55,10 @@ class DQNPolicy(LearningPolicy):
         self.memory.set_state((vec, mask))
         # epsilon-greedy
         prob, action = self._random_shot_poker(state)
-        action_idx = LearningPolicy.SHOT_POKER_ACTIONS.index(''.join(rule._to_cards(action))) + LearningPolicy.CALL_SCORE_ACTION_DIM
+        if ''.join(rule._to_cards(action)) == 'wW': # an exception in rule.json
+            action_idx = LearningPolicy.SHOT_POKER_ACTIONS.index('Ww') + LearningPolicy.CALL_SCORE_ACTION_DIM
+        else:
+            action_idx = LearningPolicy.SHOT_POKER_ACTIONS.index(''.join(rule._to_cards(action))) + LearningPolicy.CALL_SCORE_ACTION_DIM
         if prob > self.e_greedy:
             action_idx = self.model.choose(vec, mask)
             '''
