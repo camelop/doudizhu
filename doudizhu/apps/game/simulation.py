@@ -83,6 +83,7 @@ class Agent(object):
             "last_shot_poker": simulator.last_shot_poker,
             "max_call_score": simulator.max_call_score,
             "first": not simulator.last_shot_poker or simulator.last_shot_seat == simulator.whose_turn,
+            "me": self.uid
         }
         
 class Simulator(object):

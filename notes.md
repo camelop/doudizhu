@@ -6,6 +6,18 @@ A doudizhu policy should determine:
 - what score to call with cards on hand and others score
 - what card to play with history info
 
+What should it consider:
+- call score
+  - depend on cards in hand
+  - depend on who you're playing with (or should we consider this?)  
+- shot card
+  - depend on what role that we're playing
+  - depend on what is on the deck and who shotted it
+  - depend on cards in hand
+  - depend on cards that have been used
+  - depend on what cards might others hold, which may be deduced by history
+  - depend on who you're playing with (or should we consider this?)  
+
 ## Problems
 
 1. Should we change our policy when playing with different opponents?

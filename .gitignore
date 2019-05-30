@@ -45,6 +45,7 @@ nosetests.xml
 coverage.xml
 *,cover
 
-# Database & logs
-*.db
-*.log
+# Database & logs & models
+doudizhu/*.db
+doudizhu/*.log
+doudizhu/models/*

@@ -76,6 +76,7 @@ class AiPlayer(Player):
             "last_shot_poker": self.table.last_shot_poker,
             "max_call_score": self.table.max_call_score,
             "first": not self.table.last_shot_poker or self.table.last_shot_seat == self.seat,
+            "me": self.uid
         }
 
     def _call_score(self):
