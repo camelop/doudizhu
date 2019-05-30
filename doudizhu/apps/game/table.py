@@ -7,7 +7,7 @@ from tornado.ioloop import IOLoop
 from .player import Player
 from .protocol import Protocol as Pt
 from .components.simple import AiPlayer
-from .settings import POLICY
+from .settings import POLICY1, POLICY2
 
 
 class Table(object):
@@ -59,12 +59,14 @@ class Table(object):
         if size == 2 and nth == 1:
             IOLoop.current().call_later(1, self.ai_join, nth=2)
 
-        policy_name = POLICY.__name__
-        p1 = AiPlayer('Alice', policy_name+'-I', self.players[0], POLICY)
+        policy1_name = POLICY1.__class__.__name__
+        policy2_name = POLICY2.__class__.__name__
+
+        p1 = AiPlayer(policy1_name+'-I', policy1_name+'-I', self.players[0], POLICY1)
         p1.to_server([Pt.REQ_JOIN_TABLE, self.uid])
 
         if size == 1:
-            p2 = AiPlayer('Bob', policy_name+'-II', self.players[0], POLICY)
+            p2 = AiPlayer(policy2_name+'-II', policy2_name+'-II', self.players[0], POLICY2)
             p2.to_server([Pt.REQ_JOIN_TABLE, self.uid])
 
     def sync_table(self):

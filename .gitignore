@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache
 
+# VsCode
+.vscode
+
 # PyCharm
 .idea
 
@@ -41,3 +44,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+
+# Database & logs
+*.db
+*.log

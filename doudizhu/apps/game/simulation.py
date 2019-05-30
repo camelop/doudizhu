@@ -1,8 +1,51 @@
 import random, sys, os
+import json, pickle
+import sqlite3
+conn = sqlite3.connect("result.db")
 
 from .rule import rule
 from .protocol import Protocol as Pt
 from .policy.randomPolicy import RandomPolicy
+
+
+class Result(object):
+    def __init__(self, players, result, winner, seed, turn_num, histories):
+        self.p1 = players[0].uid
+        self.p2 = players[1].uid
+        self.p3 = players[2].uid
+        self.p1_type = str(players[0].policy)
+        self.p2_type = str(players[1].policy)
+        self.p3_type = str(players[2].policy)
+        self.p1_reward = result[players[0]]
+        self.p2_reward = result[players[1]]
+        self.p3_reward = result[players[2]]
+        self.winner = winner
+        self.seed = seed
+        self.turn_num = turn_num
+        self.p1_history = histories[0]
+        self.p2_history = histories[1]
+        self.p3_history = histories[2]
+
+    def save(self):
+        with conn:
+            c = conn.cursor()
+            c.execute('insert into result values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+                self.p1,
+                self.p2,
+                self.p3,
+                self.p1_type,
+                self.p2_type,
+                self.p3_type,
+                self.p1_reward,
+                self.p2_reward,
+                self.p3_reward,
+                self.winner,
+                self.seed,
+                self.turn_num,
+                json.dumps(self.p1_history),
+                json.dumps(self.p2_history),
+                json.dumps(self.p3_history),
+            ))
 
 class Agent(object):
     FARMER = 1
@@ -52,13 +95,22 @@ class Simulator(object):
         self.display = display
         pass
 
-    def run(self, seeds=None):
+    def run(self, seeds=None, mirror=False, order=None, save=True):
         '''
         run the simulations, return the trajectories
         '''
-        if isinstance(seeds, list):
-            return [self.run(seeds=seed) for seed in seeds]
+        print("RUN SIMULATION seeds={}, mirror={}, order={}".format(seeds, mirror, order), file=sys.stderr)
+        if mirror:
+            # run all possible order
+            print("\t+ expanding orders", file=sys.stderr)
+            return [self.run(seeds=seeds, order=i, save=save) for i in [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]]
+        elif isinstance(seeds, list):
+            print("\t+ expanding seeds", file=sys.stderr)
+            return [self.run(seeds=seed, order=order, save=save) for seed in seeds]
         elif isinstance(seeds, int) or seeds is None:
+            if order is not None:
+                self.old_players = self.players
+                self.players = [self.players[i] for i in order]
             self._restart(seed=seeds)
             # run deterministic simulation
             # call phase
@@ -114,10 +166,23 @@ class Simulator(object):
                             result[p] = 2*point if p.role == Agent.LANDLORD else -point
                     for p in self.players:
                         p.finish(result[p])
-                    print(self.turn, "turns", {k.uid:('FARMER' if k.role == 1 else 'LANDLORD',v) for k,v in result.items()}, file=sys.stderr)
+                    if save:
+                        self._record(winner=agent, result=result, seed=seeds)
+                    if order is not None:
+                        self.players = self.old_players
                     return result
         else:
             raise NotImplementedError
+
+    def _record(self, winner, result, seed):
+        print("\t", self.turn, "turns", {k.uid:('FARMER' if k.role == 1 else 'LANDLORD',v) for k,v in result.items()}, file=sys.stderr)
+        # record the result in database
+        r = Result(self.players, result, winner.uid, seed, self.turn, [p.history for p in self.players])
+        try:
+            r.save()
+        except Exception as err:
+            print("ERROR!!! ", err)
+
 
     def _restart(self, seed=None):
         for agent in self.players:
@@ -140,3 +205,4 @@ class Simulator(object):
             agent.hand_pokers = self.pokers[17*i:17*i+17]
             agent.hand_pokers.sort()        
             agent.rsp_deal_poker(self.players[self.whose_turn].uid, agent.hand_pokers)
+

@@ -11,12 +11,12 @@ from ..policy.basePolicy import BasePolicy
 
 class AiPlayer(Player):
 
-    def __init__(self, uid: str, username: str, player: Player, Policy: BasePolicy):
+    def __init__(self, uid: str, username: str, player: Player, policy):
         from ..views import LoopBackSocketHandler
         super().__init__(uid, username, LoopBackSocketHandler(self))
         self.room = player.room
         self.history = []
-        self.policy = Policy()
+        self.policy = policy
 
     def to_server(self, message):
         packet = json.dumps(message)
