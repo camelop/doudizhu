@@ -1,2 +1,4 @@
 2019-05-29 17:49 RESULT:	haha-haha(6)	AI[Alice]{NegativePolicy-I}(-3)	AI[Bob]{NegativePolicy-II}(-3)
 2019-05-30 18:49 RESULT:	haha-haha(3)	AI[ChooseMinPolicy-I]{ChooseMinPolicy-I}(-6)	AI[ChooseMinPolicy-II]{ChooseMinPolicy-II}(3)
+2019-05-31 12:52 RESULT:	haha-haha(6)	AI[DQNPolicy-I]{DQNPolicy-I}(6)	AI[DQNPolicy-II]{DQNPolicy-II}(-12)
+2019-05-31 12:56 RESULT:	haha-haha(3)	AI[DQNPolicy-I]{DQNPolicy-I}(-6)	AI[DQNPolicy-II]{DQNPolicy-II}(3)

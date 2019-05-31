@@ -6,8 +6,14 @@ class DQNPolicy(LearningPolicy):
     # copy and modify this part 
 
     def __init__(self, model, e_greedy=(0.3, -0.001), turn_reward=-0.01, gamma = 0.99, save_every=50, seed=None, load_tag=None, comment=None):
-        super().__init__(seed, load_tag)
         self.model = model
+        self.round = -2 # except Agent.__init__ and first_deal_poker
+        self.e_greedy, self.e_greedy_inc = e_greedy
+        self.gamma = gamma
+        self.turn_reward = turn_reward
+        self.memory = Memory()
+        self.save_every = save_every
+        self.comment = comment
         '''
         Assumptions about model
         - model.choose(vec, mask) : return the chosen action_idx
@@ -17,13 +23,7 @@ class DQNPolicy(LearningPolicy):
         - model.load(tag)
         - model.__str__ : represent a unique model
         '''
-        self.round = -2 # except Agent.__init__ and first_deal_poker
-        self.e_greedy, self.e_greedy_inc = e_greedy
-        self.gamma = gamma
-        self.turn_reward = turn_reward
-        self.memory = Memory()
-        self.save_every = save_every
-        self.comment = comment
+        super().__init__(seed, load_tag)
 
     def call_score(self, state, default_action=None, learning=True):
         '''
@@ -113,6 +113,10 @@ class DQNPolicy(LearningPolicy):
         load the model by tag
         '''
         self.model.load(tag)
+        if str(self) != tag:
+            print('should be ->', tag)
+            print('really be ->', str(self))
+        assert str(self) == tag 
     
     def reset(self):
         super().reset()

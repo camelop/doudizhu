@@ -8,10 +8,11 @@ import sys
 
 class MultiLevelPerceptron(object):
 
-    def __init__(self, action_dim, 
-        h1_dim=1000,
-        h2_dim=1000,
-        learning_rate=1e-3):
+    def __init__(self, 
+        action_dim, 
+        hidden_dims=(200,200,200,100), 
+        learning_rate=1e-3,
+        freeze=False):
 
         def try_gpu():
             try:
@@ -21,18 +22,19 @@ class MultiLevelPerceptron(object):
             except mx.base.MXNetError:
                 ctx = mx.cpu()
             return ctx
-
+            
+        self.freeze = freeze
         self.learning_rate = learning_rate
-        self.h1_dim = h1_dim
-        self.h2_dim = h2_dim
+        self.hidden_dims = hidden_dims
         self.train_num = 0
         self.ctx = try_gpu()
         self.net = nn.Sequential()
+        for d in hidden_dims:
+            self.net.add(
+                nn.Dense(d, activation='relu'),
+                nn.BatchNorm(),
+            )
         self.net.add(
-            nn.Dense(h1_dim, activation='relu'),
-            nn.BatchNorm(),
-            nn.Dense(h2_dim, activation='relu'),
-            nn.BatchNorm(),
             nn.Dense(action_dim)
         )
         self.net.initialize(init.Normal(sigma=0.01), ctx=self.ctx)
@@ -40,18 +42,19 @@ class MultiLevelPerceptron(object):
         self.trainer = gluon.Trainer(self.net.collect_params(), 'sgd', {'learning_rate': learning_rate})
     
     def train(self, states, actions, sampled_Q):
-        self.train_num += 1
-        batch_size = len(states)
-        states = nd.array(states, ctx=self.ctx)
-        actions = nd.array(actions, ctx=self.ctx)
-        sampled_Q = nd.array(sampled_Q, ctx=self.ctx)
-        with autograd.record():
-            Q = self.net(states)
-            l = self.loss(Q[list(range(sampled_Q.shape[0])), actions], sampled_Q).sum()
-        l.backward()
-        # print 'loss -> {}'.format(l)
-        self.trainer.step(batch_size)
-        return l.asscalar()
+        if not self.freeze:
+            self.train_num += 1
+            batch_size = len(states)
+            states = nd.array(states, ctx=self.ctx)
+            actions = nd.array(actions, ctx=self.ctx)
+            sampled_Q = nd.array(sampled_Q, ctx=self.ctx)
+            with autograd.record():
+                Q = self.net(states)
+                l = self.loss(Q[list(range(sampled_Q.shape[0])), actions], sampled_Q).sum()
+            l.backward()
+            # print 'loss -> {}'.format(l)
+            self.trainer.step(batch_size)
+            return l.asscalar()
 
     def predict(self, states):
         # deprecated
@@ -76,15 +79,22 @@ class MultiLevelPerceptron(object):
         self._save("models/"+tag+".mxnet")
 
     def load(self, tag):
-        self._save("models/"+tag+".mxnet")
+        self._load("models/"+tag+".mxnet")
 
     def _load(self, loc):
         try:
             self.net.load_parameters(loc)
+            if 'e(' in loc:
+                p = loc.find('e(') + 2
+                num = ''
+                while loc[p] != ')':
+                    num = num + loc[p]
+                    p += 1
+                self.train_num = int(num)
             # print("From '{}' Load DQN success :D".format(loc))
-        except:
+        except Exception as err:
             pass
-            print("From '{}' Load DQN failed".format(loc))
+            print("From '{}' Load DQN failed - {}".format(loc, str(err)))
 
     def _save(self, loc):
         try:
@@ -98,35 +108,8 @@ class MultiLevelPerceptron(object):
         self.net.initialize(init.Normal(sigma=0.01), force_reinit=True)
     
     def __str__(self):
-        return "MLP-lr({})-h1({})-h2({})-e({})".format(
+        return "MLP-lr({})-{}-e({})".format(
             self.learning_rate,
-            self.h1_dim,
-            self.h2_dim,
+            '-'.join(['h{}({})'.format(i+1, d) for i, d in enumerate(self.hidden_dims)]),
             self.train_num
         )
-
-# model_test
-if __name__ == '__main__':
-    import numpy as np
-    import random
-    model = MultiLevelPerceptron(3, h1_dim=400, h2_dim=400)
-    states = np.random.random((5, 600))
-    # test forward
-    print("state -> " + str(states))
-    print("predict -> " + str(model.predict(states)))
-    # test train
-    output = np.random.random((5, 3))
-    first = model.predict(states)
-    epoches = 1000
-    for i in range(epoches):
-        actions = [random.randint(0, 2) for _ in range(5)]
-        model.train(states, actions, output[range(5), actions])
-    print("output -> ")
-    print(output)
-    print("init ->")
-    print(first )
-    print("after {} epoches ->".format(epoches))
-    print(model.predict(states))
-    print("after reset ->".format(epoches))
-    model.reset()
-    print(model.predict(states))
