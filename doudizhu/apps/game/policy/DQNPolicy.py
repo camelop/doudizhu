@@ -29,7 +29,7 @@ class DQNPolicy(LearningPolicy):
         '''
         call a score from 1-3, if learning is true, use epsilon greedy
         '''
-        vec = LearningPolicy._get_state_vec_sv1(state)
+        vec = LearningPolicy._get_state_vec_sv2(state)
         mask = self._get_call_score_mask(state)
         self.memory.set_state((vec, mask))
         # epsilon-greedy
@@ -50,7 +50,7 @@ class DQNPolicy(LearningPolicy):
         '''
         hand_pokers = state['hand_pokers']
 
-        vec = LearningPolicy._get_state_vec_sv1(state)
+        vec = LearningPolicy._get_state_vec_sv2(state)
         mask = self._get_shot_poker_mask(state)
         self.memory.set_state((vec, mask))
         # epsilon-greedy
@@ -126,9 +126,9 @@ class DQNPolicy(LearningPolicy):
     
     def __str__(self):
         if self.comment is not None:
-            return "DQNPolicy-sv1[{}]({}).{}.v{}".format(str(self.model),  self.seed, self.comment, self.generation)
+            return "DQNPolicy-sv2[{}]({}).{}.v{}".format(str(self.model),  self.seed, self.comment, self.generation)
         else:
-            return "DQNPolicy-sv1[{}]({}).v{}".format(str(self.model), self.seed, self.generation)
+            return "DQNPolicy-sv2[{}]({}).v{}".format(str(self.model), self.seed, self.generation)
 
 class Memory(object):
 

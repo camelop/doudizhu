@@ -46,6 +46,7 @@ class ChooseMinWithRolePolicy(BasePolicy):
 
     def call_score(self, state, default_action=None):
         random.setstate(self.state)
+        random.seed(self.seed+hash(tuple(sorted(state["hand_pokers"]))))
         ret = random.sample(self._legal_call_score(state), 1)[0]
         self.state = random.getstate()
         return ret

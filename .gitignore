@@ -46,6 +46,6 @@ coverage.xml
 *,cover
 
 # Database & logs & models
-doudizhu/*.db
+*.db
 doudizhu/*.log
 doudizhu/models/*

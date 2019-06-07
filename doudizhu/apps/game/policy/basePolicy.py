@@ -13,12 +13,15 @@ class BasePolicy(object):
 
     def _legal_call_score(self, state):
         max_call_score = state['max_call_score']
-        base_score = max_call_score + 1
-        ret = []
-        if base_score <= 3:
-            for i in range(base_score, 4):
-                ret.append(i)
-        return ret
+        base_score = max(2, max_call_score + 1)
+        if max_call_score == 0:
+            return [1, 2, 3]
+        elif max_call_score == 1:
+            return [1, 2, 3]
+        elif max_call_score == 2:
+            return [1, 3]
+        else:
+            raise NotImplementedError
 
     def _legal_shot_poker(self, state):
         '''

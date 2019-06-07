@@ -213,6 +213,7 @@ class LearningPolicy(BasePolicy):
 
     def _random_call_score(self, state):
         random.setstate(self.state)
+        random.seed(self.seed+hash(tuple(sorted(state["hand_pokers"]))))
         prob = random.random()
         ret = random.sample(self._legal_call_score(state), 1)[0]
         self.state = random.getstate()
