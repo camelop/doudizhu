@@ -4,15 +4,14 @@ from mxnet.gluon import loss as gloss
 from mxnet.gluon import nn
 import sys
 
-# TODO change this!!!
-
 class MultiLevelPerceptron(object):
 
     def __init__(self, 
         action_dim, 
         hidden_dims=(200,200,200,100), 
         learning_rate=1e-3,
-        freeze=False):
+        freeze=False,
+        activation="relu"):
 
         def try_gpu():
             try:
@@ -27,56 +26,31 @@ class MultiLevelPerceptron(object):
         self.learning_rate = learning_rate
         self.hidden_dims = hidden_dims
         self.train_num = 0
+        self.activation = "relu"
         self.ctx = try_gpu()
         self.net = nn.Sequential()
         for d in hidden_dims:
             self.net.add(
-                nn.Dense(d, activation='relu'),
+                nn.Dense(d, activation=self.activation),
                 nn.BatchNorm(),
             )
-        self.net.add(
-            nn.Dense(action_dim)
-        )
-        self.net.initialize(init.Normal(sigma=0.01), ctx=self.ctx)
-        self.loss = gloss.L2Loss()
-        self.trainer = gluon.Trainer(self.net.collect_params(), 'sgd', {'learning_rate': learning_rate})
+        # define output net, initialize, loss and trainer
     
     def train(self, states, actions, sampled_Q):
-        if not self.freeze:
-            self.train_num += 1
-            batch_size = len(states)
-            states = nd.array(states, ctx=self.ctx)
-            actions = nd.array(actions, ctx=self.ctx)
-            sampled_Q = nd.array(sampled_Q, ctx=self.ctx)
-            with autograd.record():
-                Q = self.net(states)
-                l = self.loss(Q[list(range(sampled_Q.shape[0])), actions], sampled_Q).sum()
-            l.backward()
-            # print 'loss -> {}'.format(l)
-            self.trainer.step(batch_size)
-            return l.asscalar()
+        raise NotImplementedError
 
-    def predict(self, states):
-        # deprecated
-        states = nd.array(states, ctx=self.ctx)
-        return self.net(states).asnumpy()
-
-    def value(self, vec, mask):
-        # np.max(@all_allowed_Q)
-        vec = nd.array(vec, ctx=self.ctx).reshape((1, -1))
-        mask = nd.array(mask, ctx=self.ctx).reshape((1, -1))
-        result = self.net(vec)[0]
-        return nd.max(result[mask[0] > 0]).asscalar()
-
-    def choose(self, vec, mask):
-        vec = nd.array(vec, ctx=self.ctx).reshape((1, -1))
-        mask = nd.array(mask, ctx=self.ctx).reshape((1, -1))
-        result = (self.net(vec) + (mask - 1) * sys.maxsize)
-        ret = int(nd.argmax(result, axis=1).asscalar())
-        return ret
-
+    # ------------------ support functions ------------------
+    
     def save(self, tag):
         self._save("models/"+tag+".mxnet")
+
+    def _save(self, loc):
+        try:
+            self.net.save_parameters(loc)
+            # print("To '{}' Save DQN success :D".format(loc))
+        except:
+            pass
+            print("To '{}' Save MLP failed".format(loc))
 
     def load(self, tag):
         self._load("models/"+tag+".mxnet")
@@ -94,22 +68,15 @@ class MultiLevelPerceptron(object):
             # print("From '{}' Load DQN success :D".format(loc))
         except Exception as err:
             pass
-            print("From '{}' Load DQN failed - {}".format(loc, str(err)))
+            print("From '{}' Load MLP failed - {}".format(loc, str(err)))
 
-    def _save(self, loc):
-        try:
-            self.net.save_parameters(loc)
-            # print("To '{}' Save DQN success :D".format(loc))
-        except:
-            pass
-            print("To '{}' Save DQN failed".format(loc))
-    
     def reset(self):
         self.net.initialize(init.Normal(sigma=0.01), force_reinit=True)
     
     def __str__(self):
-        return "MLP-lr({})-{}-e({})".format(
+        return "MLP-lr({})-{}-{}-e({})".format(
             self.learning_rate,
+            self.activation,
             '-'.join(['h{}({})'.format(i+1, d) for i, d in enumerate(self.hidden_dims)]),
             self.train_num
         )

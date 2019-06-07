@@ -226,6 +226,12 @@ class LearningPolicy(BasePolicy):
         self.state = random.getstate()
         return prob, ret
 
+    def _random_rand(self):
+        random.setstate(self.state)
+        rand = random.random()
+        self.state = random.getstate()
+        return rand
+
     def reset(self):
         random.seed(self.seed)
         self.state = random.getstate()
