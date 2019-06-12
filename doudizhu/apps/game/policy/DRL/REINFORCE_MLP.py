@@ -29,12 +29,8 @@ class REINFORCE_MLP(MultiLevelPerceptron):
             states = nd.array(states, ctx=self.ctx)
             actions = nd.array(actions, ctx=self.ctx)
             vts = nd.array(vts, ctx=self.ctx)
-            print(states.shape)
-            print(actions.shape)
-            print(vts.shape)
             with autograd.record():
                 pred = self.net(states)
-                print(pred.shape)
                 l = self.loss(pred, actions, vts).sum() # softmax_crossentropy
             l.backward()
             # print 'loss -> {}'.format(l)

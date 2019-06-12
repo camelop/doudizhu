@@ -14,7 +14,7 @@ class DQNMLP(MultiLevelPerceptron):
         learning_rate=1e-3,
         freeze=False,
         activation="relu"):
-        super.__init__(self, action_dim, hidden_dims, learning_rate, freeze, activation)
+        super().__init__(action_dim, hidden_dims, learning_rate, freeze, activation)
         self.net.add(
             nn.Dense(action_dim)
         )

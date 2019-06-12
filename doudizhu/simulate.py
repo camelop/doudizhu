@@ -12,11 +12,11 @@ from apps.game.policy.DQNPolicy import DQNPolicy
 from apps.game.policy.DRL.REINFORCE_MLP import REINFORCE_MLP
 from apps.game.policy.PGPolicy import PGPolicy
 
-player = "Isaac"
-env = 'env1'
-epoch_num = 3
-display = True
-save = False
+player = "Imp2"
+env = 'env2'
+epoch_num = 5000  
+display = False 
+save = True
 
 if player == 'Stark':
     a1 = Agent('Stark', RandomPolicy(seed=0))
@@ -54,10 +54,34 @@ elif player == "Hill":
     a1_model = DQNMLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*4, learning_rate=1e-3)
     a1_policy = DQNPolicy(a1_model, seed=0, comment="egd0_vsChooseMinWithRole", e_greedy=(0, 0), save_every=500)
     a1 = Agent('Hill', a1_policy)
+elif player == "Happy":
+    a1_model = DQNMLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(1024, )*2, learning_rate=1e-3, activation="tanh")
+    a1_policy = DQNPolicy(a1_model, seed=0, comment="edg4_tanh", e_greedy=(4e-1, -1e-4), save_every=500)
+    a1 = Agent('Happy', a1_policy)
+elif player == "Happy2":
+    a1_model = DQNMLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*4, learning_rate=1e-3, activation="tanh")
+    a1_policy = DQNPolicy(a1_model, seed=0, comment="edg4_tanh", e_greedy=(4e-1, -1e-4), save_every=500)
+    a1 = Agent('Happy2', a1_policy)
 elif player == "Isaac":
     a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(1024, )*2, learning_rate=1e-3, activation="tanh")
-    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE_test", save_every=500)
-    a1 = Agent('Issac', a1_policy)
+    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE", save_every=500)
+    a1 = Agent('Isaac', a1_policy)
+elif player == "Isaac2":
+    a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*4, learning_rate=1e-3, activation="tanh")
+    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE", save_every=500)
+    a1 = Agent('Isaac2', a1_policy)
+elif player == "Isaac3":
+    a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*4, learning_rate=1e-3)
+    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE-relu", save_every=500)
+    a1 = Agent('Isaac3', a1_policy)
+elif player == "Imp":
+    a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(4096, )*8, learning_rate=1e-3)
+    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE-relu-env2", save_every=500)
+    a1 = Agent('Imp', a1_policy)
+elif player == "Imp2":
+    a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*8, learning_rate=1e-3)
+    a1_policy = PGPolicy(a1_model, seed=0, comment="REINFORCE-relu-env2", save_every=500)
+    a1 = Agent('Imp2', a1_policy)
 else:
     raise NotImplementedError
     
@@ -75,7 +99,6 @@ else:
 sim = Simulator([a1, a2, a3], display=display)
 # sim = Simulator([a1, a2, a3], display=True)
 time_start=time.time()
-# results = sim.run(seeds=list(range(epoch_num)), mirror=False, save=save)
-results = sim.run(seeds=[1]*5, mirror=False, save=save)
+results = sim.run(seeds=list(range(epoch_num)), mirror=False, save=save)
 time_end=time.time()
 print('Time(s)', time_end-time_start)
