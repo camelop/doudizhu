@@ -95,7 +95,7 @@ elif player == "Imp2":
 
 elif player == "James":
     a1_model = DQNMLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*8, learning_rate=1e-3)
-    a1_policy = DQNPolicy(a1_model, seed=0, comment="final_"+env, e_greedy=(4e-1, -1e-4), save_every=1000)
+    a1_policy = DQNPolicy(a1_model, seed=0, comment="final_"+env, e_greedy=(3e-1, -1e-4), save_every=1000)
     a1 = Agent(player, a1_policy)
 elif player == "Johnny":
     a1_model = REINFORCE_MLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=(2048, )*8, learning_rate=1e-3)
@@ -104,7 +104,7 @@ elif player == "Johnny":
 
 elif player == "Kate":
     a1_model = DQNMLP(action_dim=DQNPolicy.S_ACTION_DIM, hidden_dims=(2048, )*8, learning_rate=1e-3)
-    a1_policy = SA_DQNPolicy(a1_model, seed=0, comment="test_sa_"+env, e_greedy=(4e-1, -1e-4), save_every=1000)
+    a1_policy = SA_DQNPolicy(a1_model, seed=0, comment="test_sa_"+env, e_greedy=(3e-1, -1e-4), save_every=1000)
     a1 = Agent(player, a1_policy)
 else:
     raise NotImplementedError

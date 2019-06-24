@@ -248,6 +248,14 @@ class LearningPolicy(BasePolicy):
     SHOT_POKER_S_ACTION_DIM = 1 + 38 * 2
     S_ACTION_DIM = CALL_SCORE_ACTION_DIM + SHOT_POKER_S_ACTION_DIM
 
+    def _get_call_score_mask_sa(self, state):
+        legal = self._legal_call_score(state)
+        ret = []
+        for i in LearningPolicy.CALL_SCORE_ACTIONS:
+            ret.append(1 if i in legal else 0)
+        ret = ret + [0] * LearningPolicy.SHOT_POKER_S_ACTION_DIM
+        return ret
+
     def _get_shot_poker_mask_sa(self, state):
         ret = [0] * (LearningPolicy.CALL_SCORE_ACTION_DIM + LearningPolicy.SHOT_POKER_S_ACTION_DIM)
 
