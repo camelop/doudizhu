@@ -2,10 +2,12 @@ import random, sys
 
 from ..protocol import Protocol as Pt
 from .basePolicy import BasePolicy, rule
+from ..rule import Rule
 
 class LearningPolicy(BasePolicy):
 
     SHOT_POKER_ACTION_CATAGORY_NUM = 38
+    SHOT_POKER_ACTION_CATAGORY = list(rule.rules.keys()).copy()
     SHOT_POKER_ACTION_DIM = 13998 + 1
     SHOT_POKER_ACTIONS = sum([v.copy() for k,v in rule.rules.items()], [''])
     CALL_SCORE_ACTION_DIM = 3
@@ -56,6 +58,10 @@ class LearningPolicy(BasePolicy):
 
     def __str__(self):
         return "LearningPolicy({}).v{}".format(self.seed, self.generation)
+
+    def reset(self):
+        random.seed(self.seed)
+        self.state = random.getstate()
 
     # util methods
     def _get_state_detail(state):
@@ -231,8 +237,140 @@ class LearningPolicy(BasePolicy):
         rand = random.random()
         self.state = random.getstate()
         return rand
-
-    def reset(self):
-        random.seed(self.seed)
-        self.state = random.getstate()
         
+    # util about summary act
+    '''
+    Summary Act:
+        0 skip
+        1-38 use the smallest i'th-catagory
+        39-76 use the largest i'th-catagory
+    '''
+    SHOT_POKER_S_ACTION_DIM = 1 + 38 * 2
+    S_ACTION_DIM = CALL_SCORE_ACTION_DIM + SHOT_POKER_S_ACTION_DIM
+
+    def _get_shot_poker_mask_sa(self, state):
+        ret = [0] * (LearningPolicy.CALL_SCORE_ACTION_DIM + LearningPolicy.SHOT_POKER_S_ACTION_DIM)
+
+        hand_pokers = state['hand_pokers']
+        first = state['first']
+        last_shot_poker = state['last_shot_poker']
+
+        turn_pokers = last_shot_poker
+        hand_cards = Rule._to_cards(hand_pokers)
+        turn_cards = Rule._to_cards(turn_pokers)
+        
+        def mark(ret, card_type):
+            type_idx = LearningPolicy.SHOT_POKER_ACTION_CATAGORY.index(card_type)
+            ret[1 + LearningPolicy.CALL_SCORE_ACTION_DIM + type_idx] = 1
+            ret[1 + LearningPolicy.CALL_SCORE_ACTION_DIM + LearningPolicy.SHOT_POKER_ACTION_CATAGORY_NUM + type_idx] = 1
+
+        if not first:
+            ret[LearningPolicy.CALL_SCORE_ACTION_DIM] = 1 # 'skip'
+            card_type, card_value = rule._cards_value(turn_cards)
+            if not card_type:
+                raise NotImplementedError
+
+            one_rule = rule.rules[card_type]
+            for i, t in enumerate(one_rule):
+                if i > card_value and Rule.is_contains(hand_cards, t):
+                    mark(ret, card_type)
+                    break 
+            if card_value < 1000:
+                one_rule = rule.rules['bomb']
+                for t in one_rule:
+                    if Rule.is_contains(hand_cards, t):
+                        mark(ret, 'bomb')
+                        break
+                if Rule.is_contains(hand_cards, 'wW'): # ROCKET
+                    mark(ret, 'rocket')
+            return ret
+        else:
+            for card_type, one_rule in rule.rules.items():
+                for t in one_rule:
+                    if Rule.is_contains(hand_cards, t):
+                        mark(ret, card_type)
+                        break
+            return ret
+
+    def _random_shot_poker_sa(self, state, mask):
+        '''
+        return prob, action, action_idx
+        NOTICE: action_idx is starting from 3 
+                because of call score actions
+        '''
+        random.setstate(self.state)
+        prob = random.random()
+        # print("mask", [LearningPolicy.SHOT_POKER_ACTION_CATAGORY[(i-4)%38] for i, m in enumerate(mask) if m != 0 and i > 3])
+        action_idx = random.sample([i for i, m in enumerate(mask) if m != 0], 1)[0]
+        self.state = random.getstate()
+        return prob, self._sa_idx_to_pokers(action_idx, state), action_idx
+    
+    def _sa_idx_to_pokers(self, action_idx, state):
+        '''
+        return action
+        '''
+        hand_pokers = state['hand_pokers']
+        first = state['first']
+        last_shot_poker = state['last_shot_poker']
+
+        turn_pokers = last_shot_poker
+        hand_cards = Rule._to_cards(hand_pokers)
+        turn_cards = Rule._to_cards(turn_pokers)
+        shot_poker_idx = action_idx - LearningPolicy.CALL_SCORE_ACTION_DIM
+
+        if shot_poker_idx == 0:
+            assert not first
+            return () # shot nothing
+        
+        type_idx = shot_poker_idx - 1
+        small = type_idx < LearningPolicy.SHOT_POKER_ACTION_CATAGORY_NUM
+        type_idx %= LearningPolicy.SHOT_POKER_ACTION_CATAGORY_NUM
+        target_type = LearningPolicy.SHOT_POKER_ACTION_CATAGORY[type_idx]
+
+        if not first:
+            card_type, card_value = rule._cards_value(turn_cards)
+            if not card_type:
+                raise NotImplementedError
+
+            one_rule = rule.rules[card_type]
+            if card_type == target_type: # if not bomb
+                large_ret = None
+                for i, t in enumerate(one_rule):
+                    if i > card_value and Rule.is_contains(hand_cards, t):
+                        if small:
+                            return tuple(Rule._to_pokers(hand_pokers, t))
+                        else:
+                            large_ret = tuple(Rule._to_pokers(hand_pokers, t))
+                if large_ret is not None:
+                    return large_ret
+
+            if target_type == 'rocket' and Rule.is_contains(hand_cards, 'wW'): # ROCKET
+                return (52, 53)
+            if target_type == 'bomb':
+                one_rule = rule.rules['bomb']
+                large_ret = None
+                for t in one_rule:
+                    if Rule.is_contains(hand_cards, t):
+                        if small:
+                            return tuple(Rule._to_pokers(hand_pokers, t))
+                        else:
+                            large_ret = tuple(Rule._to_pokers(hand_pokers, t))
+                if large_ret is not None:
+                    return large_ret
+            print("target_type", target_type)
+            raise NotImplementedError
+        else:
+            for card_type, one_rule in rule.rules.items():
+                if card_type != target_type:
+                    continue
+                large_ret = None
+                for t in one_rule:
+                    if Rule.is_contains(hand_cards, t):
+                        if small:
+                            return tuple(Rule._to_pokers(hand_pokers, t))
+                        else:
+                            large_ret = tuple(Rule._to_pokers(hand_pokers, t))
+                if large_ret != None:
+                    return large_ret
+            print("target_type", target_type)
+            raise NotImplementedError
