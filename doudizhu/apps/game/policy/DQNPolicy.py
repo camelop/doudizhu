@@ -46,7 +46,7 @@ class DQNPolicy(LearningPolicy):
 
     def shot_poker(self, state, default_action=None, learning=True):
         '''
-        shot a valid poker set, if learning is true, use epsilon greedy
+        shot a valid poker set, if learning is true, use epsilon greedy [THIS TODO]
         '''
         hand_pokers = state['hand_pokers']
 

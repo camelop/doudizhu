@@ -14,18 +14,22 @@ from apps.game.policy.DRL.REINFORCE_MLP import REINFORCE_MLP
 from apps.game.policy.PGPolicy import PGPolicy
 from apps.game.policy.SA_PGPolicy import SA_PGPolicy
 
+from apps.game.policy.HDQNPolicy import HDQNPolicy
 
-player = "Ken"
+
+player = "Lee"
 env = 'env1'
-epoch_num = 5000  
-display = False 
-save = True
-'''
-# test setting
-epoch_num = 1  
-display = True 
-save = False
-'''
+isTest = False
+
+if not isTest:
+    epoch_num = 5000  
+    display = False 
+    save = True
+else:
+    # test setting
+    epoch_num = 3
+    display = True 
+    save = False
 
 
 if player == 'Stark':
@@ -111,6 +115,13 @@ elif player == "Kate":
 elif player == "Ken":
     a1_model = REINFORCE_MLP(action_dim=DQNPolicy.S_ACTION_DIM, hidden_dims=(2048, )*8, learning_rate=1e-3)
     a1_policy = SA_PGPolicy(a1_model, seed=0, comment="test_sa_"+env, save_every=1000)
+    a1 = Agent(player, a1_policy)
+elif player == "Lee":
+    hidden_param = (2048, ) * 8
+    # hidden_param = (64, ) * 2
+    a1_option_model = DQNMLP(action_dim=HDQNPolicy.OPTION_DIM, hidden_dims=hidden_param, learning_rate=1e-3)
+    a1_action_model = DQNMLP(action_dim=DQNPolicy.ACTION_DIM, hidden_dims=hidden_param, learning_rate=1e-3)
+    a1_policy = HDQNPolicy(a1_option_model, a1_action_model, seed=0, comment="test_hdqn_"+env, e_greedy=(3e-1, -1e-4), save_every=1000)
     a1 = Agent(player, a1_policy)
 else:
     raise NotImplementedError

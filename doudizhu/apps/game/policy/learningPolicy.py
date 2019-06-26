@@ -6,12 +6,12 @@ from ..rule import Rule
 
 class LearningPolicy(BasePolicy):
 
+    CALL_SCORE_ACTION_DIM = 3
+    CALL_SCORE_ACTIONS = [1, 2, 3]
     SHOT_POKER_ACTION_CATAGORY_NUM = 38
     SHOT_POKER_ACTION_CATAGORY = list(rule.rules.keys()).copy()
     SHOT_POKER_ACTION_DIM = 13998 + 1
     SHOT_POKER_ACTIONS = sum([v.copy() for k,v in rule.rules.items()], [''])
-    CALL_SCORE_ACTION_DIM = 3
-    CALL_SCORE_ACTIONS = [1, 2, 3]
     ACTION_DIM = CALL_SCORE_ACTION_DIM + SHOT_POKER_ACTION_DIM
     # copy and modify this part 
 
