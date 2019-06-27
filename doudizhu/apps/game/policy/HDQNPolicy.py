@@ -146,9 +146,13 @@ class HDQNPolicy(LearningPolicy):
         if role == "LANDLORD":
             mask[HDQNPolicy.SHOT_POKER_OPTIONS.index('help_teammate')] = 0
         mask = [0] * HDQNPolicy.CALL_SCORE_OPTION_DIM + mask
-        new_option = self.option_model.choose(vec, mask)
+        # e_greedy
+        prob = self._random_rand()
+        new_option = HDQNPolicy.CALL_SCORE_OPTION_DIM + int(self._random_rand() * 4)
+        if prob > self.e_greedy or mask[new_option] != 1:
+            new_option = self.option_model.choose(vec, mask)
         self.option = new_option - HDQNPolicy.CALL_SCORE_OPTION_DIM
-        # print("New Option -> ",self.SHOT_POKER_OPTIONS[self.option])
+        print("New Option -> ",self.SHOT_POKER_OPTIONS[self.option])
         return vec, mask, new_option
 
     def _train_option(self, sars):
@@ -173,7 +177,7 @@ class HDQNPolicy(LearningPolicy):
             else:
                 qvalues.append(r + self.gamma * self.action_model.value(s_[0], s_[1]))
         loss = self.action_model.train(states, actions, qvalues)
-        return loss
+        return loss 
 
 def is_sub_trajectory_terminal(state):
     if state is None:
@@ -331,6 +335,7 @@ class HMemory(object):
         '''
         # slice trajectory into sub-trajectories
         i = 0
+        first = True
         ret = []
         current_sars = []
         evaluator = None
@@ -338,14 +343,15 @@ class HMemory(object):
             s, a, r, s_, isLast = self.action_memory[i], self.action_memory[i+1], self.action_memory[i+2], self.action_memory[i+3], i+6 >= len(self.action_memory)
             # for each sub-trajectory, figure out its sub-goal
             if evaluator is None: # a new turn or error
-                if i == 0: # call_score
+                if i == 0 and self.option_memory[1][0] < HDQNPolicy.CALL_SCORE_OPTION_DIM: # call_score exists, skip
                     i += 3
                     continue
                 else:
                     new_option = self.option_memory[i+1][0]
                     assert new_option is not None
                     evaluator = HMemory.Evaluator(HDQNPolicy.SHOT_POKER_OPTIONS[new_option - HDQNPolicy.CALL_SCORE_OPTION_DIM])
-                    if i == 3:
+                    if first:
+                        first = False
                         evaluator.update(s[2])
             if s_ is None:
                 # for the last

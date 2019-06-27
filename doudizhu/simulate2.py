@@ -20,7 +20,7 @@ from apps.game.policy.HDQNPolicy import HDQNPolicy
 
 
 player = "Lee"
-env = 'env1'
+env = 'env2'
 isTest = False
 
 if not isTest:

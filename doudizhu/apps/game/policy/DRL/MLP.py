@@ -11,7 +11,8 @@ class MultiLevelPerceptron(object):
         hidden_dims=(200,200,200,100), 
         learning_rate=1e-3,
         freeze=False,
-        activation="relu"):
+        activation="relu",
+        batchnorm=True):
 
         def try_gpu():
             try:
@@ -32,8 +33,11 @@ class MultiLevelPerceptron(object):
         for d in hidden_dims:
             self.net.add(
                 nn.Dense(d, activation=self.activation),
-                nn.BatchNorm(),
             )
+            if batchnorm:
+                self.net.add(
+                    nn.BatchNorm(),
+                )
         # define output net, initialize, loss and trainer
     
     def train(self, states, actions, sampled_Q):
