@@ -1,10 +1,13 @@
-## 斗地主 &nbsp;&nbsp;
+## RL方法考察斗地主 &nbsp;&nbsp;
 [![Build Status](https://travis-ci.org/mailgyc/doudizhu.svg?branch=master)](https://travis-ci.org/mailgyc) &nbsp;&nbsp;
 [![Coverage Status](https://coveralls.io/repos/github/mailgyc/doudizhu/badge.svg?branch=master)](https://coveralls.io/github/mailgyc/doudizhu?branch=master) &nbsp;&nbsp;
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)  
 
 
 斗地主游戏，后端基于Python+Tornado+MySQL开发，前端 Phaser 引擎
+使用高度精简的接口，可用于开发、测试、展示以及交互各种自定义的Bot策略
+预置了几种基础的Agent Policy，以及可用的强化学习Policy（基于DQN的、基于REINFORCE以及基于层次化强化学习的等等）
+模型效果可强于基于贪心的强策略。
 
 **Dependencies**
 
